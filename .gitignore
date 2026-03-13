@@ -1,6 +1,5 @@
 .DS_store
 closure-library
-build
 **/*.pyc
 blockly/*_compressed.js
 blockly/*_uncompressed.js
