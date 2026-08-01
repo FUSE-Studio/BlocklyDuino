@@ -1,22 +1,23 @@
 @ echo OFF
 
-REM This is a batch transliteration of build.sh for hapless Windows devs.  It
-REM assembles things for local testing but does not sync to AWS.
+REM Retired — kept only so muscle memory hits this message instead of the old
+REM script. It used to `rmdir build /s /q` and repopulate from
+REM blockly\apps\blocklyduino\, which is destructive: build\ is now the source
+REM of truth and holds fixes that never existed upstream (Chrome 109+
+REM Event.path polyfill, flyout click and pointer-events fixes, the sparki
+REM toolbox category). It also copied blockly\*_compressed.js, which are not in
+REM the repo, and ran a Closure build that cannot work — build.py is Python 2
+REM only, closure-library is an unchecked-out submodule, and the Google API it
+REM called is long gone.
+REM
+REM See build.sh and the Makefile header for the full story.
 
-REM In order for joint.py to run, the lxml library must be installed.
-REM It's recommended to run this script in a virtualenv.
-
-cd blockly
-C:\Python27\python build.py
-C:\Python27\python joint.py
-cd ..
-
-rmdir build /s /q
-ROBOCOPY blockly build\js arduino_compressed.js blockly_compressed.js blocks_compressed.js /NFL /NDL /NJH /NJS /nc /ns /np > nul
-ROBOCOPY blockly\apps\blocklyduino build header.js /NFL /NDL /NJH /NJS /nc /ns /np > nul
-ROBOCOPY blockly\apps\blocklyduino\js\ build\js\ /NFL /NDL /NJH /NJS /nc /ns /np > nul
-ROBOCOPY blockly\apps\blocklyduino\fonts\ build\fonts\ /NFL /NDL /NJH /NJS /nc /ns /np > nul
-ROBOCOPY blockly\msg\js\ build\msg\js\ /NFL /NDL /NJH /NJS /nc /ns /np > nul
-ROBOCOPY blockly\media\ build\media\ /NFL /NDL /NJH /NJS /nc /ns /np > nul
-ROBOCOPY blockly\apps\blocklyduino\css\ build\css\ /NFL /NDL /NJH /NJS /nc /ns /np > nul
-MOVE blockly\apps\blocklyduino\index.html build\index.html > nul
+echo build.bat is retired and does nothing - it used to destroy build\.
+echo.
+echo   make dev            build and serve locally on :8080
+echo   make index          regenerate build\index.html from src\
+echo   make publish-dev    publish to the dev satellite CDN
+echo   make publish-prod   publish to the prod satellite CDN
+echo.
+echo See the Makefile header for why blockly\ is no longer a build input.
+exit /b 1

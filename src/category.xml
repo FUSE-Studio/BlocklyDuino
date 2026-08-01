@@ -781,6 +781,35 @@
     <block type="logic_negate"></block>
     <block type="logic_boolean"></block>
 </category>
+<category id="category_sparki">
+	<block type="sparki_move_forward"></block>
+	<block type="sparki_move_backward"></block>
+	<block type="sparki_move_left"></block>
+	<block type="sparki_move_right"></block>
+	<block type="sparki_servo">
+        <value name="ANGLE"><block type="math_number">
+			<field name="NUM">0</field>
+		</block></value>
+	</block>
+	<block type="sparki_opengripper"></block>
+	<block type="sparki_closegripper"></block>
+	<block type="sparki_stop_movement"></block>
+	<block type="sparki_stopgripper"></block>
+	<block type="sparki_bark"></block>
+	<block type="sparki_ultrasonicdistance"></block>
+	<block type="sparki_light_sensor"></block>
+	<block type="sparki_ir_reflectance_sensor"></block>
+	<block type="sparki_accelerometer"></block>
+	<block type="sparki_lcd_print">
+        <value name="CONTENT">
+            <block type="text">
+                <field name="TEXT"></field>
+            </block>
+        </value>
+	</block>
+	<block type="sparki_lcd_clear"></block>
+  <block type="sparki_lose"></block>
+</category>
 <category id="category_loops">
     <block type="controls_repeat"></block>
     <block type="controls_for">

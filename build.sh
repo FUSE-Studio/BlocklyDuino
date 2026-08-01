@@ -1,25 +1,30 @@
 #!/bin/sh
+#
+# Retired — kept only so muscle memory hits this message instead of the old
+# script. It used to `rm -rf build` and repopulate from blockly/apps/blocklyduino/,
+# which is destructive: build/ is now the source of truth and holds fixes that
+# never existed upstream.
+#
+#   header.js      Event.path polyfill (Chrome 109+), audio-preload disable,
+#                  flyout click-target fix
+#   css/style.css  pointer-events fix for flyouts in modern browsers
+#   js/init.js     category_sparki in the base toolbox
+#
+# It also copied blockly/*_compressed.js, which are not in the repo, and ran a
+# Closure build that cannot work: build.py is Python 2 only, closure-library is
+# an unchecked-out submodule, and the Google API it called is long gone. The
+# only copies of the compiled Blockly core are the ones under build/js/.
+#
+# Running it deleted 83 tracked files and reverted 4 more. Use the Makefile.
 
-# In order for joint.py to run, the lxml library must be installed.
-# It's recommended to run this script in a virtualenv.
-cd blockly
-python build.py
-python joint.py
-cd ..
+cat >&2 <<'EOF'
+build.sh is retired and does nothing — it used to destroy build/.
 
-rm -rf build && mkdir -p build/css && mkdir -p build/js && mkdir -p build/msg/js && mkdir -p build/media && mkdir -p build/fonts
+  make dev            build and serve locally on :8080
+  make index          regenerate build/index.html from src/
+  make publish-dev    publish to the dev satellite CDN
+  make publish-prod   publish to the prod satellite CDN
 
-cp blockly/arduino_compressed.js build/js/arduino_compressed.js
-cp blockly/blockly_compressed.js build/js/blockly_compressed.js
-cp blockly/blocks_compressed.js build/js/blocks_compressed.js
-cp blockly/apps/blocklyduino/header.js build/header.js
-cp blockly/apps/blocklyduino/js/* build/js/
-cp -r blockly/apps/blocklyduino/fonts/* build/fonts/
-cp blockly/msg/js/* build/msg/js/
-cp blockly/media/* build/media/
-cp blockly/apps/blocklyduino/css/*  build/css/
-mv blockly/apps/blocklyduino/index.html build/index.html
-
-cd build
-aws s3 sync . s3://blockly.fusestudio.net --region us-east-2 --acl public-read
-cd ..
+See the Makefile header for why blockly/ is no longer a build input.
+EOF
+exit 1

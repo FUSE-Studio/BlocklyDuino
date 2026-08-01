@@ -1,26 +1,54 @@
+<!DOCTYPE html>
 <html>
 
   <head>
     <!--Specify encoding-->
-    <meta charset="utf-8">
+    <meta charset="utf-8" />
     <!--Import materialize.css-->
-    <link type="text/css" rel="stylesheet" href="css/materialize.min.css" media="screen,projection">
+    <!--__ASSET_BASE__ is substituted at publish time; see the Makefile.-->
+    <link type="text/css" rel="stylesheet" href="__ASSET_BASE__/css/materialize.min.css" media="screen,projection" />
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
     <!--Let browser know website is optimized for mobile-->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <!--Import jQuery before materialize.js-->
-    <script type="text/javascript" src="header.js"></script>
+    <script type="text/javascript" src="__ASSET_BASE__/header.js"></script>
   </head>
 
   <body>
     <nav>
       <div class="nav-wrapper blue-grey darken-4">
-        <a href="./" class="brand-logo">BlocklyDuino Editor</a>
+        <!-- The FUSE mark links back to the student app, not the marketing
+             site. index.html is served from the Laravel origin at /blockly, so
+             a root-relative href follows whichever host we're on rather than
+             pinning dev traffic to prod. Inlined rather than loaded as a file
+             so it needs no asset-base resolution and no extra request. -->
+        <a href="/" class="brand-logo fuse-logo" title="FUSE Studio">
+          <svg viewBox="0 0 920 800" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="FUSE Studio">
+            <g id="NEW_CUBE">
+              <path fill="#74bf44" d="M907.76,584.97c0,39.44-157.07,188.6-199.85,188.6H96.38c-42.78,0-77.62-25.66-77.62-65.1V241.2c0-14.63,138-199.63,204-220.63h603.04c42.78,0,81.96,29.61,81.96,69.05v495.35Z"/>
+              <path fill="#fdea32" d="M911.05,576.82c0,37.88-30.39,68.58-67.88,68.58H232.28c-37.49,0-67.88-30.7-67.88-68.58V79.61c0-37.88,30.39-68.58,67.88-68.58h610.89c37.49,0,67.88,30.7,67.88,68.58v497.21Z"/>
+              <path fill="#e8356d" d="M150.75,621.57c.09,27.8.53,27.58-30.03,52.85l-65.52,56.68c-35.62,32.29-46.16,40.19-45.51,7.85v-453.69c2.08-33.69-9.92-53.69,26.08-99.69l62-66c64.85-68.76,53-49,52.84-3.74l.15,505.74Z"/>
+              <path fill="#ed6c2b" d="M185.72,657c-28.51-.8-34.29,2.97-56.74,23.87l-78.22,67.85c-40.81,34.95-27.43,35.03,11.96,34.95l553.18-.06c78.89,0,98.61,3.42,129.5-17.55l77.34-63.49c50.35-42.72,42.81-45.15,3.42-45.07l-640.46-.5Z"/>
+            </g>
+            <g id="FUSE" transform="translate(0 110)">
+              <g id="letter-f">
+                <rect fill="#87d1e6" x="222.46" y="252.97" width="47.38" height="201.27"/>
+                <rect fill="#76bc21" x="222.46" y="412.89" width="47.38" height="46.74"/>
+                <polygon fill="#76bc21" points="269.84 330.24 222.46 330.24 222.46 376.98 269.84 376.98 324.02 376.98 324.02 330.24 269.84 330.24"/>
+                <polygon fill="#76bc21" points="364.64 294.34 364.64 247.59 317.24 247.59 269.84 247.59 222.46 247.59 222.46 294.34 269.84 294.34 317.24 294.34 364.64 294.34"/>
+              </g>
+              <path id="letter-u" fill="#76bc21" d="M488.02,392.09c0,17.63-9.76,26.94-28.21,26.94s-28.53-9.57-28.53-26.94v-144.46h-53.03v146.32c0,41.61,32.3,69.55,80.35,69.55s79.75-27.28,79.75-69.55v-146.32h-50.32v144.46Z"/>
+              <path id="letter-s" fill="#76bc21" d="M554.99,383.36v16.07c0,41.24,29.82,65.86,79.77,65.86,52.42,0,75.86-34.01,75.86-67.7,0-39.66-35.61-52.94-64.24-63.63-20.08-7.5-37.45-13.98-37.45-27.02s9.19-20.14,24.62-20.14c17.68,0,28.23,9.49,28.23,25.4v1.46l48.26,10.56v-16.06c0-38.45-30.73-64.3-76.49-64.3s-75.27,26.84-75.27,65.23,35.03,52.95,63.17,63.75c20.34,7.83,37.92,14.57,37.92,28.42s-8.48,21.08-25.21,21.08c-11.54,0-30.9-3.51-30.9-26.92"/>
+              <g id="letter-e">
+                <rect fill="#87d1e6" x="729" y="252.97" width="47.37" height="201.27"/>
+                <rect fill="#76bc21" x="728.83" y="414.73" width="142.17" height="46.74"/>
+                <polygon fill="#76bc21" points="775.81 334.05 728.43 334.05 728.43 380.79 775.81 380.79 829.98 380.79 829.98 334.05 775.81 334.05"/>
+                <polygon fill="#76bc21" points="871 298.14 871 251.39 823.61 251.39 776.21 251.39 728.83 251.39 728.83 298.14 776.21 298.14 823.61 298.14 871 298.14"/>
+              </g>
+            </g>
+          </svg>
+        </a>
         <ul class="right show-on-small">
-          <li><a class="tooltipped" href="https://chrome.google.com/webstore/detail/blocklyduino-editor/ohncgafccgdbigbbikgkfbkiebahihmb" target="_blank" id="get-app" data-tooltip="I am tooltip"><i class="material-icons">get_app</i></a>
-          </li>
-          <li><a class="tooltipped" href="http://lets.makewitharduino.com" target="_blank" id="go-to-sample" data-tooltip="I am tooltip"><i class="material-icons">receipt</i></a>
-          </li>
           <li><a class="waves-effect waves-light modal-trigger tooltipped" id="change-lang" href="#modal1" data-tooltip="I am tooltip"><i class="material-icons">settings</i></a>
           </li>
         </ul>
@@ -36,15 +64,15 @@
             <tbody>
               <tr>
                 <td>
-                  <input class="with-gap" name="group1" type="radio" id="select-lang-en" value="en">
+                  <input class="with-gap" name="group1" type="radio" id="select-lang-en" value="en" />
                   <label for="select-lang-en" id="label-en">English</label>
                 </td>
                 <td>
-                  <input class="with-gap" name="group1" type="radio" id="select-lang-ja" value="ja">
+                  <input class="with-gap" name="group1" type="radio" id="select-lang-ja" value="ja" />
                   <label for="select-lang-ja" id="label-ja">日本語</label>
                 </td>
                 <td>
-                  <input class="with-gap" name="group1" type="radio" id="select-lang-ja_kids" value="ja_kids">
+                  <input class="with-gap" name="group1" type="radio" id="select-lang-ja_kids" value="ja_kids" />
                   <label for="select-lang-ja_kids" id="label-ja-kids">にほんご</label>
                 </td>
               </tr>
@@ -55,43 +83,43 @@
             <tbody>
               <tr>
                 <td>
-                  <input type="checkbox" class="filled-in" id="chbox_category_adafruit" value="category_adafruit">
+                  <input type="checkbox" class="filled-in" id="chbox_category_adafruit" value="category_adafruit" />
                   <label for="chbox_category_adafruit">adafruit</label>
                 </td>
                 <td>
-                  <input type="checkbox" class="filled-in" id="chbox_category_grove" value="category_grove">
+                  <input type="checkbox" class="filled-in" id="chbox_category_grove" value="category_grove" />
                   <label for="chbox_category_grove">grove</label>
                 </td>
                 <td>
-                  <input type="checkbox" class="filled-in" id="chbox_category_robot" value="category_robot">
+                  <input type="checkbox" class="filled-in" id="chbox_category_robot" value="category_robot" />
                   <label for="chbox_category_robot">robot</label>
                 </td>
               </tr>
               <tr>
                 <td>
-                  <input type="checkbox" class="filled-in" id="chbox_category_ethernet" value="category_ethernet">
+                  <input type="checkbox" class="filled-in" id="chbox_category_ethernet" value="category_ethernet" />
                   <label for="chbox_category_ethernet">Ethernet</label>
                 </td>
                 <td>
-                  <input type="checkbox" class="filled-in" id="chbox_category_cloud_service" value="category_cloud_service">
+                  <input type="checkbox" class="filled-in" id="chbox_category_cloud_service" value="category_cloud_service" />
                   <label for="chbox_category_cloud_service">category_cloud_service</label>
                 </td>
                 <td>
-                  <input type="checkbox" class="filled-in" id="chbox_category_servo" value="category_servo">
+                  <input type="checkbox" class="filled-in" id="chbox_category_servo" value="category_servo" />
                   <label for="chbox_category_servo">servo</label>
                 </td>
               </tr>
               <tr>
                 <td>
-                  <input type="checkbox" class="filled-in" id="chbox_category_ultrasonic" value="category_ultrasonic">
+                  <input type="checkbox" class="filled-in" id="chbox_category_ultrasonic" value="category_ultrasonic" />
                   <label for="chbox_category_ultrasonic">ultrasonic</label>
                 </td>
                 <td>
-                  <input type="checkbox" class="filled-in" id="chbox_category_lcd" value="category_lcd">
+                  <input type="checkbox" class="filled-in" id="chbox_category_lcd" value="category_lcd" />
                   <label for="chbox_category_lcd">lcd</label>
                 </td>
                 <td>
-                  <input type="checkbox" class="filled-in" id="chbox_category_other_sensor" value="category_other_sensor">
+                  <input type="checkbox" class="filled-in" id="chbox_category_other_sensor" value="category_other_sensor" />
                   <label for="chbox_category_other_sensor">other sensor</label>
                 </td>
               </tr>
@@ -149,7 +177,7 @@
     <ul id="dropdown1" class="dropdown-content">
       <li><a class="modal-trigger" href="#modal_import" id="button_import">Import</a>
       </li>
-      <li class="divider">
+      <li class="divider"></li>
       <li><a href="javascript:void(0)" id="button_export" onclick="export_xml()">Export</a>
       </li>
     </ul>
@@ -160,16 +188,16 @@
           <table id="tab">
             <tr id="tabRow">
               <td id="tab_blocks" class="tabon " onclick="tabClick('blocks')">Blocks</td>
-              <td class="tabmin"> </td>
+              <td class="tabmin">&nbsp;</td>
               <td id="tab_arduino" class="taboff" onclick="tabClick('arduino')"></td>
-              <td class="tabmin"> </td>
+              <td class="tabmin">&nbsp;</td>
               <td class="tabmax">
-                <a href="javascript:void(0)" class="hide-link tooltipped" id="copy-button" data-tooltip="I am tooltip" data-clipboard-target="content_arduino" data-clipboard-text="Clip Me!"><i class="small material-icons">content_copy</i></a>
+                <a href="javascript:void(0)" class="hide-link tooltipped" id="copy-button" data-tooltip="I am tooltip"><i class="small material-icons">content_copy</i></a>
                 <a href="javascript:void(0)" class="hide-link tooltipped" id="discard" onclick="discard()" data-tooltip="I am tooltip"><i class="small material-icons">delete</i></a>
                 <a href="javascript:void(0)" class="hide-link tooltipped" data-tooltip="I am tooltip" id="save" onclick="save()"><i class="small material-icons">cloud_download</i></a>
                 <a href="javascript:void(0)" class="hide-link tooltipped" id="fakeload" data-tooltip="I am tooltip"><i class="small material-icons">cloud_upload</i></a>
                 <a class="hide-link dropdown-button" href="javascript:void(0)" data-activates="dropdown1"><i class="small material-icons">arrow_drop_down</i></a>
-                <input type="file" id="load" style="display: none;">
+                <input type="file" id="load" style="display: none;" />
               </td>
             </tr>
           </table>
@@ -180,9 +208,53 @@
       </tr>
     </table>
     <div id="content_blocks" class="content"></div>
-    <textarea id="content_arduino" class="content" readonly wrap="off"></textarea>
 
-    <xml id="toolbox" style="display: none"><category id="category_initializes">
+    <!-- The Arduino tab. Keep the id "content_arduino": tabClick(), TABS_ and
+         the onresize handler in init.js all key off "content_" + tab name, and
+         onresize is what positions this pane over #content_area. -->
+    <div id="content_arduino" class="content">
+      <div class="arduino-pane">
+        <div class="arduino-pane__code">
+          <textarea id="arduino_code" readonly wrap="off" spellcheck="false"></textarea>
+          <div class="arduino-console-label">Console</div>
+          <pre id="arduino_console">(compile output will appear here)</pre>
+        </div>
+
+        <aside class="arduino-pane__controls">
+          <div id="arduino_unsupported" class="arduino-warning" style="display: none">
+            This page needs the Web Serial API to send your program to the
+            Arduino. Open it in Chrome or Edge.
+          </div>
+
+          <button type="button" id="arduino_compile" class="btn waves-effect">
+            <i class="material-icons left">build</i><span>Compile</span>
+          </button>
+
+          <div class="arduino-board">
+            <div class="arduino-board__label">Arduino board</div>
+            <div class="arduino-board__status" id="arduino_board_status">Not connected</div>
+          </div>
+
+          <button type="button" id="arduino_connect" class="btn-flat waves-effect">
+            Connect Arduino…
+          </button>
+
+          <button type="button" id="arduino_upload" class="btn waves-effect" disabled>
+            <i class="material-icons left">arrow_upward</i><span>Upload to Arduino</span>
+          </button>
+
+          <div id="arduino_flash_status" class="arduino-flash-status"></div>
+
+          <div class="arduino-hint">
+            Uploading takes a few seconds. If it fails, press the reset button
+            on the Arduino and try again.
+          </div>
+        </aside>
+      </div>
+    </div>
+
+    <xml id="toolbox" style="display: none">
+<category id="category_initializes">
     <block type="initializes_setup"></block>
 </category>
 <category id="category_inout">

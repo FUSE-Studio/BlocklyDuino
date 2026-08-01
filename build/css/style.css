@@ -119,19 +119,153 @@ input.blocklyhtmlinput {
   overflow: scroll;
 }
 
+/* The Arduino tab. onresize in init.js sets an explicit pixel height on
+   .content, so border-box keeps the 1ex padding from overflowing it. */
 #content_arduino {
+  box-sizing: border-box;
+  background-color: #fff;
+}
+
+.arduino-pane {
+  display: flex;
+  gap: 12px;
+  height: 100%;
+}
+
+.arduino-pane__code {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.arduino-pane__controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  flex: 0 0 260px;
+  overflow-y: auto;
+}
+
+/* Generated code: read-only, and styled like the old Arduino tab textarea. */
+#arduino_code {
+  flex: 1 1 auto;
   resize: none;
   outline: none;
   border: none;
+  margin: 0;
+  padding: 8px;
+  box-sizing: border-box;
   font-family: monospace;
-  overflow: scroll;
+  overflow: auto;
   background-color: #073642;
   color: #eee8d5;
   font-size: 12px;
-  line-height: 12px;
-  word-break: break-all;
-  word-wrap: break-word;
+  line-height: 1.4;
+  white-space: pre;
+}
+
+.arduino-console-label {
+  font-weight: bold;
+  font-size: 12px;
+  padding: 6px 0 2px;
+}
+
+#arduino_console {
+  flex: 0 0 auto;
+  height: 140px;
+  margin: 0;
+  padding: 8px;
+  box-sizing: border-box;
+  overflow: auto;
+  background-color: #002b36;
+  color: #eee8d5;
+  font-family: monospace;
+  font-size: 12px;
+  line-height: 1.4;
   white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Materialize pins .btn to a 36px line with nowrap+ellipsis, which truncates
+   "Upload to Arduino" to "UPLOAD TO". Let these wrap instead — the labels are
+   full sentences on purpose, for students who don't know the jargon yet. */
+.arduino-pane__controls .btn,
+.arduino-pane__controls .btn-flat {
+  width: 100%;
+  height: auto;
+  min-height: 36px;
+  line-height: 1.3;
+  padding: 8px 12px;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+}
+
+.arduino-pane__controls .btn i.material-icons.left,
+.arduino-pane__controls .btn-flat i.material-icons.left {
+  line-height: inherit;
+  margin-right: 6px;
+}
+
+/* Give the flat button an outline so it reads as a control, not a label. */
+.arduino-pane__controls .btn-flat {
+  border: 1px solid #26a69a;
+  color: #26a69a;
+  border-radius: 2px;
+}
+
+/* Materialize's disabled styling doesn't reliably win here, and an Upload
+   button that looks armed while it is inert is worse than no styling. */
+.arduino-pane__controls .btn:disabled,
+.arduino-pane__controls .btn-flat:disabled {
+  background-color: #e0e0e0 !important;
+  border-color: #e0e0e0;
+  color: #9e9e9e !important;
+  box-shadow: none;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.arduino-board {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  padding: 8px;
+  background: #fafafa;
+}
+
+.arduino-board__label {
+  font-size: 12px;
+  color: #666;
+}
+
+.arduino-board__status {
+  font-weight: bold;
+  word-break: break-word;
+}
+
+.arduino-flash-status {
+  font-size: 13px;
+  color: #333;
+  min-height: 1.2em;
+}
+
+.arduino-flash-status--error {
+  color: #c62828;
+}
+
+.arduino-warning {
+  border: 1px solid #ffb300;
+  background: #fff8e1;
+  color: #6d4c00;
+  border-radius: 4px;
+  padding: 8px;
+  font-size: 13px;
+}
+
+.arduino-hint {
+  font-size: 12px;
+  color: #777;
 }
 
 #content_area {
@@ -191,6 +325,21 @@ a.hide-link{
 
 nav .brand-logo{
   margin-left: 20px;
+}
+
+/* Size the SVG child rather than the anchor, the way rendley-ui's navbar does.
+   The mark is a near-square 920x800, so height drives it and width follows. */
+nav .brand-logo.fuse-logo {
+  display: flex;
+  align-items: center;
+  height: 64px;
+  line-height: normal;
+}
+
+nav .brand-logo.fuse-logo svg {
+  display: block;
+  height: 44px;
+  width: auto;
 }
 
 @media screen and (max-width: 768px) {

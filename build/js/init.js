@@ -43,18 +43,10 @@ function renderContent() {
     Blockly.mainWorkspace.render();
     button.style.display = "none";
   } else if (content.id == 'content_arduino') {
-    //content.innerHTML = Blockly.Arduino.workspaceToCode();
-    var arduinoTextarea = document.getElementById('content_arduino');
-    arduinoTextarea.value = Blockly.Arduino.workspaceToCode();
-    //IEでフォーカスさせると、navバーが消えるため
-    var ua = window.navigator.userAgent;
-    var isIE = false;
-    if(ua.match(/MSIE/) || ua.match(/Trident/)){
-        isIE = true;
-    }
-    if(!isIE){
-        arduinoTextarea.focus();
-    }
+    // The Arduino tab tracks the workspace continuously (see arduino_tab.js),
+    // so switching to it only needs to catch up anything the debounce is still
+    // holding — no regeneration or focus juggling here.
+    if (window.renderArduinoCode) window.renderArduinoCode();
     button.style.display = "";
   }
 }
@@ -127,6 +119,9 @@ function init() {
 
     auto_save_and_restore_blocks();
     setCheckbox();
+
+    // After the workspace exists, so the tab can attach its change listener.
+    if (window.initArduinoTab) window.initArduinoTab();
 
   //load from url parameter (single param)
   //http://stackoverflow.com/questions/2090551/parse-query-string-in-javascript
@@ -220,11 +215,22 @@ function sendChrome(url){
   return false;
 }
 
+// Replaces ZeroClipboard, which needed a Flash .swf and so had been silently
+// dead in every browser for years.
 function clipboard() {
-  var client = new ZeroClipboard(document.getElementById("copy-button"));
-  client.on("ready", function (readyEvent) {
-    client.on("aftercopy", function (event) {
+  var button = document.getElementById("copy-button");
+  if (!button) return;
+
+  button.addEventListener("click", function () {
+    var code = document.getElementById("content_arduino");
+    if (!code) return;
+
+    var text = "value" in code ? code.value : code.textContent;
+
+    navigator.clipboard.writeText(text).then(function () {
       Materialize.toast(Blockly.Msg.COPY_DONE, 4000);
+    }, function (err) {
+      Materialize.toast("Couldn't copy: " + err, 4000);
     });
   });
 }
@@ -277,8 +283,6 @@ function setCharacter(){
   $("#tab_blocks").text(Blockly.Msg.BLOCKS);
   $("#tab_arduino").text(Blockly.Msg.ARDUINO);
 
-  $("#get-app").attr("data-tooltip",Blockly.Msg.DOWNLOAD_CHROME_APP);
-  $("#go-to-sample").attr("data-tooltip",Blockly.Msg.GO_TO_SAMPLE);
   $("#change-lang").attr("data-tooltip",Blockly.Msg.CHANGE_LANG);
   $("#dialog-lang-title").text(Blockly.Msg.DIALOG_LANG_TITLE);
   $("#dialog-block-title").text(Blockly.Msg.DIALOG_BLOCK_TITLE);
