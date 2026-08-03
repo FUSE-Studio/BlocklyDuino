@@ -20,6 +20,11 @@ var filepath = { media: ASSET_BASE + '/media', msg_ja: ASSET_BASE + "/msg/js/ja.
 
   html += '<script type="text/javascript" src="' + ASSET_BASE + '/js/blockly_compressed.js"></script>';
   // Disable Blockly audio preload (triggers autoplay policy errors), but allow playback on user interaction
+  //
+  // Only the preload is stubbed, not loadAudio_ — the Audio objects still get
+  // built so click/delete play on interaction. That needs media-src on the
+  // page's CSP to name the satellite origins, since the mp3s are cross-origin
+  // now; see BlocklyCspHeaders in the Laravel app.
   // Fix flyout click handling for modern browsers (Event.path removal, SVG click targets)
   html += '<script>';
   html += 'Blockly.preloadAudio_=function(){};';

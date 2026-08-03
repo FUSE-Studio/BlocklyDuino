@@ -222,7 +222,9 @@ function clipboard() {
   if (!button) return;
 
   button.addEventListener("click", function () {
-    var code = document.getElementById("content_arduino");
+    // The code textarea, not the whole pane — copying #content_arduino swept up
+    // the card labels, board status and trademark line along with the sketch.
+    var code = document.getElementById("arduino_code");
     if (!code) return;
 
     var text = "value" in code ? code.value : code.textContent;

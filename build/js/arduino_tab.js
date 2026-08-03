@@ -61,6 +61,13 @@ function setFlashStatus(text, isError) {
     el.flashStatus.classList.toggle("arduino-flash-status--error", !!isError);
 }
 
+// The status box is red until a board is attached and green once one is, so the
+// answer to "will Upload go anywhere?" is readable without reading.
+function setBoardStatus(text, connected) {
+    el.boardStatus.textContent = text;
+    el.boardStatus.classList.toggle("arduino-board__status--connected", !!connected);
+}
+
 // A compiled hex only matches the code it was built from, so any workspace edit
 // invalidates it — otherwise Upload would quietly flash a stale program.
 function invalidateHex() {
@@ -144,7 +151,7 @@ async function connect() {
     setFlashStatus("");
     try {
         state.port = await navigator.serial.requestPort({ filters: ARDUINO_USB_FILTERS });
-        el.boardStatus.textContent = describePort(state.port.getInfo());
+        setBoardStatus(describePort(state.port.getInfo()), true);
     } catch (e) {
         if (e?.name === "NotFoundError") return; // the picker was dismissed
         setFlashStatus(`Could not connect: ${e?.message ?? e}`, true);
@@ -212,14 +219,14 @@ export function initArduinoTab() {
         navigator.serial.getPorts().then((ports) => {
             if (ports.length > 0 && !state.port) {
                 state.port = ports[0];
-                el.boardStatus.textContent = describePort(ports[0].getInfo());
+                setBoardStatus(describePort(ports[0].getInfo()), true);
                 refreshUploadButton();
             }
         });
         navigator.serial.addEventListener("disconnect", (event) => {
             if (event.target === state.port) {
                 state.port = null;
-                el.boardStatus.textContent = "Not connected";
+                setBoardStatus("Not connected", false);
                 refreshUploadButton();
             }
         });

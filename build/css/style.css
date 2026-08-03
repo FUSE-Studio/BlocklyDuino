@@ -11,14 +11,39 @@ body {
   overflow: hidden;
 }
 
+/* How far anything anchored to a window edge sits in from it: the brand mark on
+   the left of the nav, the settings gear on its right, the tab strip below.
+   One value because they line up vertically and any drift between them reads as
+   a mistake.
+
+   In px, not ex/rem. materialize.css rescales the root font responsively
+   (14px / 14.5px / 15px at 0 / 992px / 1200px), and body inherits it at 100%,
+   so a font-relative inset would shift at breakpoints these elements know
+   nothing about — and never actually equal 20px at any of them. */
+:root {
+  --edge-inset: 20px;
+}
+
 /* Tabs */
+
+/* The rule under the tab strip lives on #tab_bar, the full-width cell wrapping
+   #tab, because #tab is inset by --edge-inset and a border on it would stop
+   short of both window edges. The tab cells therefore draw no bottom border of
+   their own — they used to, and that segment is what went ragged once the strip
+   was inset. Open-bottomed tabs sitting on one continuous line is also the
+   conventional look, and the active tab's #ddd fill matches the line so it
+   still reads as joined to the pane below. */
+td#tab_bar {
+  border-bottom: 2px solid #ddd;
+}
+
 #tabRow>td {
   border: 1px solid #ccc;
+  border-bottom: none;
   vertical-align: middle;
 }
 
 td.tabon {
-  border-bottom-color: #ddd !important;
   background-color: #ddd;
   padding: 5px 10px;
 }
@@ -64,8 +89,15 @@ table#main{
   padding-bottom: 20px;
 }
 
+/* Inset the tab strip from the window edges. It has to be done here, on the
+   table box: border-collapse (above) makes the UA drop padding on a table, and
+   margins don't apply to the cells inside it. The width has to lose the inset
+   in the same breath — width:100% plus margins overflows, and body's
+   overflow:hidden then clips the right-hand one, which reads as the margin
+   being ignored when it is only off-screen. */
 table#tab{
-  width: 100%
+  width: calc(100% - 2 * var(--edge-inset));
+  margin-inline: var(--edge-inset);
 }
 
 tr#tabRow{
@@ -104,9 +136,37 @@ pre.content {
   pointer-events: all;
 }
 
-input.blocklyhtmlinput {
-  background-color: white;
+/* Blockly's field editor — the box you type into when editing a value on a
+   block. Blockly's class is blocklyHtmlInput; this selector used to be spelled
+   blocklyhtmlinput, and matched anyway because index.html shipped without a
+   DOCTYPE. Quirks mode compares class selectors ASCII case-insensitively;
+   standards mode does not, so restoring the DOCTYPE silently unhooked it.
+   The symptom was a second, much taller box sitting below and right of the
+   value being edited.
+
+   materialize.css catches this element with `input:not([type])` — Blockly
+   creates it with no type attribute — and gives it height:3rem, a bottom
+   margin, its own border and a focus shadow, none of which suit a field
+   editor sized to the text it overlays. Reset them explicitly rather than
+   relying on `height` alone.
+
+   Scoped through .blocklyWidgetDiv purely for specificity: materialize's focus
+   rule is `input:not([type]):focus:not([readonly])` (0,3,1), which outranks a
+   plain `input.blocklyHtmlInput:focus` (0,2,1) and would repaint the editor
+   with its teal underline and glow the moment you typed. The extra ancestor
+   class levels that up, and this file loads after materialize's, so the tie
+   falls our way. */
+.blocklyWidgetDiv input.blocklyHtmlInput,
+.blocklyWidgetDiv input.blocklyHtmlInput:focus {
+  box-sizing: content-box;
   height: initial;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  background-color: white;
+  transition: none;
 }
 
 #content_xml {
@@ -120,105 +180,219 @@ input.blocklyhtmlinput {
 }
 
 /* The Arduino tab. onresize in init.js sets an explicit pixel height on
-   .content, so border-box keeps the 1ex padding from overflowing it. */
+   .content, so border-box keeps the padding from overflowing it.
+
+   The padding moves off this element and onto .arduino-pane so that the query
+   container's content box is the tab's full width — otherwise the breakpoint
+   below would fire ~14px early, at a width nobody could name. */
 #content_arduino {
+  background-color: #ddd;
   box-sizing: border-box;
-  background-color: #fff;
+  padding: 0;
+  container-type: inline-size;
 }
 
 .arduino-pane {
   display: flex;
-  gap: 12px;
+  gap: 16px;
+  box-sizing: border-box;
   height: 100%;
+  margin-inline: auto;
+  max-width: 1024px;
+  padding: 1ex 2ex;
 }
 
-.arduino-pane__code {
+.arduino-card {
   display: flex;
   flex-direction: column;
-  flex: 1 1 auto;
+  box-sizing: border-box;
   min-width: 0;
+  padding: 14px 16px;
+  border: 1px solid #d5dae0;
+  border-radius: 14px;
+  background: #fff;
 }
 
-.arduino-pane__controls {
-  display: flex;
-  flex-direction: column;
+.arduino-card--code {
+  flex: 1 1 auto;
+}
+
+.arduino-card--board {
+  flex: 0 1 260px;
+  min-width: 168px;
   gap: 10px;
-  flex: 0 0 260px;
+  text-align: center;
   overflow-y: auto;
 }
 
-/* Generated code: read-only, and styled like the old Arduino tab textarea. */
-#arduino_code {
-  flex: 1 1 auto;
-  resize: none;
-  outline: none;
-  border: none;
-  margin: 0;
-  padding: 8px;
-  box-sizing: border-box;
-  font-family: monospace;
-  overflow: auto;
-  background-color: #073642;
-  color: #eee8d5;
-  font-size: 12px;
-  line-height: 1.4;
-  white-space: pre;
+.arduino-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
 }
 
-.arduino-console-label {
+.arduino-card__title {
+  font-size: 15px;
   font-weight: bold;
+  color: #1f2933;
+}
+
+.arduino-card__title--sub {
+  padding: 12px 0 6px;
+}
+
+/* Generated code: read-only, and a plain light box so it reads as a document
+   rather than as a second console. */
+#arduino_code {
+  flex: 1 1 auto;
+  min-height: 120px;
+  resize: none;
+  outline: none;
+  margin: 0;
+  padding: 10px 12px;
+  box-sizing: border-box;
+  border: 1px solid #b9c0c7;
+  border-radius: 8px;
+  background-color: #fff;
+  color: #1f2933;
+  font-family: monospace;
+  overflow: auto;
   font-size: 12px;
-  padding: 6px 0 2px;
+  line-height: 1.5;
+  white-space: pre;
 }
 
 #arduino_console {
   flex: 0 0 auto;
-  height: 140px;
+  height: 150px;
   margin: 0;
-  padding: 8px;
+  padding: 12px 14px;
   box-sizing: border-box;
   overflow: auto;
-  background-color: #002b36;
-  color: #eee8d5;
+  border-radius: 10px;
+  background-color: #21252a;
+  color: #e6e8ea;
   font-family: monospace;
   font-size: 12px;
-  line-height: 1.4;
+  line-height: 1.5;
   white-space: pre-wrap;
   word-break: break-word;
 }
 
-/* Materialize pins .btn to a 36px line with nowrap+ellipsis, which truncates
-   "Upload to Arduino" to "UPLOAD TO". Let these wrap instead — the labels are
-   full sentences on purpose, for students who don't know the jargon yet. */
-.arduino-pane__controls .btn,
-.arduino-pane__controls .btn-flat {
-  width: 100%;
+/* Two columns from 640px (Tailwind's sm breakpoint) of pane width up. Narrower
+   than that there is no room for both, so the board card stacks under the code
+   and the pane itself scrolls. Stated as "below 604px" rather than "at or
+   above" so a browser without container queries falls back to two columns,
+   which is the desktop case.
+
+   In px on purpose: materialize.css rescales the root font responsively
+   (14px / 14.5px / 15px), so 24rem here would land anywhere from 336px to
+   360px, and would move as the window crossed Materialize's breakpoints.
+
+   This block sits below every rule it overrides rather than up beside
+   .arduino-pane, because a container query adds no specificity of its own —
+   source order is the only thing deciding these. */
+@container (width < 640px) {
+  .arduino-pane {
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  /* Both cards size to their contents and the pane scrolls. Sharing one column
+     of height instead would squeeze the code card below what it holds, and the
+     console would spill through the card's rounded border. */
+  .arduino-card {
+    flex: 0 0 auto;
+  }
+
+  .arduino-card--board {
+    overflow-y: visible;
+  }
+
+  #arduino_code {
+    flex: 0 0 auto;
+    height: 220px;
+  }
+
+  #arduino_console {
+    height: 120px;
+  }
+}
+
+.arduino-logo {
+  display: block;
+  width: 116px;
   height: auto;
-  min-height: 36px;
+  margin: 2px auto 4px;
+}
+
+/* Materialize pins .btn to a 36px line with nowrap+ellipsis and uppercases the
+   label. Let these wrap and keep their own capitalisation instead.
+
+   The transition is narrowed on purpose. Materialize sets `transition: .2s
+   ease-out`, and that shorthand means transition-property:all — including
+   `visibility`. tabClick() hides this pane by setting visibility:hidden on
+   #content_arduino, which every descendant inherits instantly except these
+   buttons, whose inherited change animates. The result was Compile/Connect/
+   Upload hanging over the Blocks workspace for a beat after switching tabs. */
+.arduino-card .btn,
+.arduino-card .btn-flat {
+  transition: background-color .2s ease-out, color .2s ease-out, border-color .2s ease-out;
+  height: auto;
+  min-height: 38px;
   line-height: 1.3;
-  padding: 8px 12px;
+  padding: 9px 18px;
+  border-radius: 8px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
   white-space: normal;
   overflow: visible;
   text-overflow: clip;
 }
 
-.arduino-pane__controls .btn i.material-icons.left,
-.arduino-pane__controls .btn-flat i.material-icons.left {
+.arduino-card--board .btn,
+.arduino-card--board .btn-flat {
+  width: 100%;
+}
+
+.arduino-card__head .btn {
+  flex: 0 0 auto;
+}
+
+.arduino-card .btn i.material-icons.left,
+.arduino-card .btn-flat i.material-icons.left {
   line-height: inherit;
   margin-right: 6px;
 }
 
+/* Arduino's teal, taken from the mark above, in place of Materialize's. */
+.arduino-card .btn {
+  background-color: #00979c;
+  box-shadow: none;
+}
+
+.arduino-card .btn:hover,
+.arduino-card .btn:focus {
+  background-color: #007b7f;
+}
+
 /* Give the flat button an outline so it reads as a control, not a label. */
-.arduino-pane__controls .btn-flat {
-  border: 1px solid #26a69a;
-  color: #26a69a;
-  border-radius: 2px;
+.arduino-card .btn-flat {
+  border: 1px solid #00979c;
+  color: #00979c;
+}
+
+.arduino-card .btn-flat:hover {
+  background-color: rgba(0, 151, 156, 0.08);
 }
 
 /* Materialize's disabled styling doesn't reliably win here, and an Upload
    button that looks armed while it is inert is worse than no styling. */
-.arduino-pane__controls .btn:disabled,
-.arduino-pane__controls .btn-flat:disabled {
+.arduino-card .btn:disabled,
+.arduino-card .btn-flat:disabled {
   background-color: #e0e0e0 !important;
   border-color: #e0e0e0;
   color: #9e9e9e !important;
@@ -227,21 +401,27 @@ input.blocklyhtmlinput {
   pointer-events: none;
 }
 
-.arduino-board {
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  padding: 8px;
-  background: #fafafa;
-}
-
 .arduino-board__label {
-  font-size: 12px;
-  color: #666;
+  font-size: 13px;
+  font-weight: bold;
+  color: #1f2933;
 }
 
+/* Red until a board is attached, green once one is — the status box is the only
+   place the tab says whether Upload will go anywhere. */
 .arduino-board__status {
+  padding: 8px 10px;
+  border: 2px solid #c62828;
+  border-radius: 6px;
+  color: #c62828;
+  font-size: 13px;
   font-weight: bold;
   word-break: break-word;
+}
+
+.arduino-board__status--connected {
+  border-color: #2e7d32;
+  color: #2e7d32;
 }
 
 .arduino-flash-status {
@@ -258,14 +438,26 @@ input.blocklyhtmlinput {
   border: 1px solid #ffb300;
   background: #fff8e1;
   color: #6d4c00;
-  border-radius: 4px;
+  border-radius: 8px;
   padding: 8px;
   font-size: 13px;
+  text-align: left;
 }
 
 .arduino-hint {
   font-size: 12px;
-  color: #777;
+  line-height: 1.4;
+  color: #6b7280;
+}
+
+/* Tailwind's text-xs (12px/16px). margin-top:auto pins the credit to the foot
+   of the card, below the flash status, however tall the column ends up. */
+.arduino-trademark {
+  margin: auto 0 0;
+  padding-top: 10px;
+  font-size: 12px;
+  line-height: 16px;
+  color: #8a9099;
 }
 
 #content_area {
@@ -324,7 +516,15 @@ a.hide-link{
 }
 
 nav .brand-logo{
-  margin-left: 20px;
+  margin-left: var(--edge-inset);
+}
+
+/* The gear is the only thing in the nav's right-hand list, so its padding is
+   what sets its distance from the window edge. Materialize defaults it to 15px
+   and its own breakpoint takes it to 5px; state it once here instead, so the
+   nav's two ends stay level with each other and with the tab strip. */
+nav ul a{
+  padding: 0 var(--edge-inset);
 }
 
 /* Size the SVG child rather than the anchor, the way rendley-ui's navbar does.
@@ -350,9 +550,6 @@ nav .brand-logo.fuse-logo svg {
     -ms-transform: translateX(0%);
     -o-transform: translateX(0%);
     font-size : 20px;
-  }
-  nav ul a{
-    padding:0 5px;
   }
 }
 

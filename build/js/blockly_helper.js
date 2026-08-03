@@ -102,8 +102,14 @@ function auto_save_and_restore_blocks() {
   // Restore saved blocks in a separate thread so that subsequent
   // initialization is not affected from a failed load.
   window.setTimeout(restore_blocks, 0);
-  // Hook a save function onto unload.
-  bindEvent(window, 'unload', backup_blocks);
+  // Hook a save function onto page dismissal.
+  //
+  // 'pagehide', not 'unload': Chrome's Permissions Policy now blocks unload
+  // handlers ("unload is not allowed in this document"), so this backup was
+  // never running — a student's work was only ever saved by whatever else
+  // touched localStorage. pagehide fires on the same navigations and, unlike
+  // unload, is compatible with the back/forward cache.
+  bindEvent(window, 'pagehide', backup_blocks);
   tabClick(selected);
 
   // Init load event.
