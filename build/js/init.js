@@ -131,15 +131,23 @@ function init() {
   }
 }
 
+// Categories that are always present and cannot be turned off in Settings.
+var TOOLBOX_BASE = "category_logic,category_loops,category_array,category_math,category_text,category_variables,category_functions,category_sep,category_initializes,category_inout,category_time,category_serial,category_interrupts,category_sep,category_ht1632_matrix";
+
+// Optional categories that start switched on. Unlike TOOLBOX_BASE these stay
+// user-toggleable: once Settings has been saved, the stored list wins outright,
+// so unchecking servo really does remove it.
+var TOOLBOX_DEFAULT_OPTIONAL = "category_servo";
+
 function buildtoolBox() {
   var loadIds;
-  var base = "category_logic,category_loops,category_array,category_math,category_text,category_variables,category_functions,category_sep,category_initializes,category_inout,category_time,category_serial,category_interrupts,category_sep,category_ht1632_matrix,category_ir_remote,category_sep,category_sparki";
+  var base = TOOLBOX_BASE;
 
   var option = window.localStorage.toolboxids;
 
   // set the default toolbox if none
   if (option === undefined || option === "") {
-      loadIds = base;
+      loadIds = base + ',' + TOOLBOX_DEFAULT_OPTIONAL;
   }else{
       loadIds = base + ',' + option;
   }
@@ -160,11 +168,14 @@ function buildtoolBox() {
 
 function setCheckbox(){
   var option = window.localStorage.toolboxids;
-  if(option){
-    var options = option.split(',');
-    for (var i = 0; i < options.length; i++) {
-      $('#chbox_' + options[i]).prop('checked',true);
-    }
+  // Nothing saved yet: show the defaults as ticked so the modal matches the
+  // toolbox the user is actually looking at. Once saved, the stored list is
+  // authoritative — don't re-tick defaults the user deliberately turned off.
+  var options = (option === undefined || option === "")
+      ? TOOLBOX_DEFAULT_OPTIONAL.split(',')
+      : option.split(',');
+  for (var i = 0; i < options.length; i++) {
+    $('#chbox_' + options[i]).prop('checked',true);
   }
 }
 

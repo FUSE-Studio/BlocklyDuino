@@ -392,36 +392,6 @@
         </value>
     </block>
 </category>
-<category id="category_ir_remote">
-
-    <block type="variables_set" inline="false">
-        <field name="TYPE">Unsigned_Long</field>
-        <field name="VAR">button</field>
-        <value name="VALUE">
-            <block type="ir_remote_get"></block>
-        </value>
-    </block> <!-- ir_get shown inside a set var block -->
-    <!--
-    <block type="logic_compare">
-        <field name="OP">EQ</field>
-        <value name="A">
-            <block type="variables_get">
-                <field name="TYPE">Unsigned_Long</field>
-                <field name="VAR">button</field>
-            </block>
-        </value>
-        <value name="B">
-            <block type="ir_remote_button">
-                <field name="BUTTON">POWER</field>
-            </block>
-        </value>
-    </block> <!- - ir_button compared w/ variable in an equals block - ->
-    -->
-    <!--
-    <block type="ir_remote_get"></block>
-    -->
-    <block type="ir_remote_button"></block>
-</category>
 <category id="category_adafruit">
     <category id="category_rgbled">
         <block type="rgbled_begin"></block>
@@ -780,35 +750,6 @@
     <block type="logic_operation"></block>
     <block type="logic_negate"></block>
     <block type="logic_boolean"></block>
-</category>
-<category id="category_sparki">
-	<block type="sparki_move_forward"></block>
-	<block type="sparki_move_backward"></block>
-	<block type="sparki_move_left"></block>
-	<block type="sparki_move_right"></block>
-	<block type="sparki_servo">
-        <value name="ANGLE"><block type="math_number">
-			<field name="NUM">0</field>
-		</block></value>
-	</block>
-	<block type="sparki_opengripper"></block>
-	<block type="sparki_closegripper"></block>
-	<block type="sparki_stop_movement"></block>
-	<block type="sparki_stopgripper"></block>
-	<block type="sparki_bark"></block>
-	<block type="sparki_ultrasonicdistance"></block>
-	<block type="sparki_light_sensor"></block>
-	<block type="sparki_ir_reflectance_sensor"></block>
-	<block type="sparki_accelerometer"></block>
-	<block type="sparki_lcd_print">
-        <value name="CONTENT">
-            <block type="text">
-                <field name="TEXT"></field>
-            </block>
-        </value>
-	</block>
-	<block type="sparki_lcd_clear"></block>
-  <block type="sparki_lose"></block>
 </category>
 <category id="category_loops">
     <block type="controls_repeat"></block>
