@@ -1,0 +1,147 @@
+# .forgejo/workflows/publish.yml — publish BlocklyDuino to the satellite CDN.
+#
+# Follows the release convention of the fuse-laravel app: a dated, immutable
+# tag IS the deploy trigger. dev<date>.<nn> ships to the dev bucket,
+# v<date>.<nn> to prod. No tag is ever moved, so the tag list is the deploy
+# log and a rollback is a new higher tag on an older commit.
+#
+# The globs are 'dev20*' and 'v20*' rather than 'dev*'/'v*', deliberately and
+# for the same reason as over there: it keeps historical tags from ever firing
+# a deploy. Keep them in step with my/bitbucket-pipelines.yml and with
+# scripts/validate-release-tag.sh.
+#
+# Runs on the self-hosted runner on evfuseforge (`runs-on: docker`). That box
+# is 2 vCPU / ~1.9G available, which is ample here: this build is python3
+# stdlib and nothing else.
+
+name: publish
+
+on:
+  push:
+    tags:
+      - 'dev20*'
+      - 'v20*'
+
+env:
+  # The satellite bucket parameter and bucket live here; matches the region
+  # the Laravel deploy uses. The Makefile passes no --region, so the profile
+  # written below has to carry it.
+  AWS_REGION: us-east-2
+
+jobs:
+  # FIRST, ALWAYS, AND BEFORE ANY CREDENTIAL IS IN SCOPE. The glob that
+  # triggered this workflow is far looser than the actual scheme -- 'v20*'
+  # happily matches v20-hotfix -- so this is the only place the real format,
+  # the date ceiling and the forward-only ratchet are enforced. A bad tag
+  # fails here in seconds rather than after a build, and no AWS key has been
+  # decrypted at that point.
+  validate-tag:
+    runs-on: docker
+    container:
+      image: docker.io/alpine:3.21
+    steps:
+      - name: Install git and bash
+        # The alpine image has neither, and the validator needs both: bash for
+        # the script itself, git for the ls-remote the ratchet depends on.
+        run: apk add --no-cache git bash
+
+      - uses: actions/checkout@v4
+        with:
+          # NEVER recurse. .gitmodules declares closure-library, which the
+          # Makefile is explicit about: blockly/ is upstream reference only,
+          # its Closure toolchain is Python 2 and needs a Google API that no
+          # longer exists. Fetching it would pull a large repo for nothing.
+          submodules: false
+          # The ratchet uses `git ls-remote`, which needs no history.
+          fetch-depth: 1
+
+      - name: Validate the release tag
+        run: ./scripts/validate-release-tag.sh "${{ github.ref_name }}"
+
+  # dev and prod are separate jobs rather than one job selecting a profile,
+  # and the duplication is the point: each job has ONLY its own credentials in
+  # scope. A single job would need both secret pairs in its environment, so a
+  # dev deploy would be carrying production keys it has no use for. The two
+  # environments are different AWS accounts.
+  publish-dev:
+    needs: validate-tag
+    if: startsWith(github.ref_name, 'dev')
+    runs-on: docker
+    container:
+      image: docker.io/python:3.12-slim
+    steps:
+      - name: Install make, git and the AWS CLI
+        run: |
+          apt-get update -qq
+          apt-get install -y --no-install-recommends make git ca-certificates
+          pip install --quiet --root-user-action=ignore awscli
+
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+          fetch-depth: 1
+
+      - name: Materialise the fuse-dev profile
+        # The Makefile hardcodes --profile $(AWS_PROFILE), so rather than
+        # patch it for CI we give it the profile it already expects. The
+        # Makefile then runs here exactly as it does on a laptop.
+        env:
+          KEY_ID: ${{ secrets.SATELLITE_DEV_AWS_ACCESS_KEY_ID }}
+          SECRET: ${{ secrets.SATELLITE_DEV_AWS_SECRET_ACCESS_KEY }}
+        run: |
+          set -euo pipefail
+          test -n "$KEY_ID" || { echo "SATELLITE_DEV_AWS_ACCESS_KEY_ID is not set" >&2; exit 1; }
+          mkdir -p ~/.aws
+          umask 077
+          printf '[fuse-dev]\naws_access_key_id=%s\naws_secret_access_key=%s\nregion=%s\n' \
+            "$KEY_ID" "$SECRET" "$AWS_REGION" > ~/.aws/credentials
+
+      - name: Show the version being published
+        # VERSION is the short SHA, plus a -dirty-<timestamp> suffix if the
+        # tree is not clean. A CI checkout should always be clean, so a dirty
+        # version means something modified the tree -- much better seen here
+        # than discovered later as an unexplained extra S3 prefix.
+        run: |
+          git rev-parse --short HEAD
+          git status --porcelain
+
+      - name: Publish to the dev CDN
+        run: make publish-dev
+
+  publish-prod:
+    needs: validate-tag
+    if: startsWith(github.ref_name, 'v')
+    runs-on: docker
+    container:
+      image: docker.io/python:3.12-slim
+    steps:
+      - name: Install make, git and the AWS CLI
+        run: |
+          apt-get update -qq
+          apt-get install -y --no-install-recommends make git ca-certificates
+          pip install --quiet --root-user-action=ignore awscli
+
+      - uses: actions/checkout@v4
+        with:
+          submodules: false
+          fetch-depth: 1
+
+      - name: Materialise the fuse-prod profile
+        env:
+          KEY_ID: ${{ secrets.SATELLITE_PROD_AWS_ACCESS_KEY_ID }}
+          SECRET: ${{ secrets.SATELLITE_PROD_AWS_SECRET_ACCESS_KEY }}
+        run: |
+          set -euo pipefail
+          test -n "$KEY_ID" || { echo "SATELLITE_PROD_AWS_ACCESS_KEY_ID is not set" >&2; exit 1; }
+          mkdir -p ~/.aws
+          umask 077
+          printf '[fuse-prod]\naws_access_key_id=%s\naws_secret_access_key=%s\nregion=%s\n' \
+            "$KEY_ID" "$SECRET" "$AWS_REGION" > ~/.aws/credentials
+
+      - name: Show the version being published
+        run: |
+          git rev-parse --short HEAD
+          git status --porcelain
+
+      - name: Publish to the prod CDN
+        run: make publish-prod
