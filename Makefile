@@ -9,7 +9,7 @@
 # API that no longer exists, and the compiled artefacts it would produce are
 # already committed under build/js/. Do not wire it back into the build.
 
-AWS_PROFILE            ?= terraform-dev
+AWS_PROFILE            ?= fuse-dev
 SATELLITE_BUCKET_PARAM ?= /laravel/satellite-apps-bucket
 
 # S3 key prefix; matches the public route (/blockly), per the publisher
@@ -33,7 +33,7 @@ VERSION   ?= $(GIT_SHA)$(GIT_DIRTY)
 DEV_CDN  ?= https://dev.satellite.fusestudio.net
 PROD_CDN ?= https://satellite.fusestudio.net
 
-PROD_AWS_PROFILE ?= terraform-prod
+PROD_AWS_PROFILE ?= fuse-prod
 
 PORT ?= 8080
 
