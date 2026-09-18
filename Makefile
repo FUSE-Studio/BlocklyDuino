@@ -8,6 +8,25 @@
 # Closure toolchain is Python 2, needs an unchecked-out submodule and a Google
 # API that no longer exists, and the compiled artefacts it would produce are
 # already committed under build/js/. Do not wire it back into the build.
+#
+#   make local          -> dest/local/, asset base LOCAL_ORIGIN/blockly, no publish
+#   make dev            -> dist/ with relative assets, served on :PORT (no Laravel)
+#   make publish-dev    -> dev.satellite.fusestudio.net/blockly/<version>/  (profile fuse-dev)
+#   make publish-prod   -> satellite.fusestudio.net/blockly/<version>/      (profile fuse-prod)
+#
+# `make local` is how to test inside FUSE before a publish. It needs the
+# satellite-local Herd site (fusestudio.net/satellite-local, served at
+# LOCAL_ORIGIN) to have a `blockly` symlink into this repo's dest/local, the same
+# shape as pixelart and rendley. Laravel's local .env points
+# SATELLITE_APPS_LOCAL_PATH at satellite-local, so my.fusestudio.test/blockly
+# reads dest/local/index.html through that symlink, and the page's assets load
+# from LOCAL_ORIGIN. Compile works there too: the page is same-origin with
+# Laravel, exactly as in production.
+#
+# SatelliteApp caches index.html for 5 minutes, so a change to src/ (the
+# toolbox, the Arduino tab markup) shows up after that, or immediately after
+#   php artisan cache:forget satellite.blockly.index-html
+# Changes to build/js and build/css show on the next reload.
 
 AWS_PROFILE            ?= fuse-dev
 SATELLITE_BUCKET_PARAM ?= /laravel/satellite-apps-bucket
@@ -33,18 +52,23 @@ VERSION   ?= $(GIT_SHA)$(GIT_DIRTY)
 DEV_CDN  ?= https://dev.satellite.fusestudio.net
 PROD_CDN ?= https://satellite.fusestudio.net
 
+# The satellite-local Herd site. Override for another static origin, e.g.
+#   LOCAL_ORIGIN=http://localhost:8080 make local
+LOCAL_ORIGIN ?= https://satellite.fusestudio.test
+
 PROD_AWS_PROFILE ?= fuse-prod
 
 PORT ?= 8080
 
 .PHONY: help
 help:
+	@echo "make local          build dest/local/ for the satellite-local Herd site ($(LOCAL_ORIGIN)/$(APP)/)"
 	@echo "make dev            build dist/ for local use and serve it on :$(PORT)"
 	@echo "make index          regenerate build/index.html from src/"
 	@echo "make dist           materialise dist/ (requires ASSET_BASE=...)"
 	@echo "make publish-dev    publish to $(DEV_CDN)/$(APP)/$(VERSION)"
 	@echo "make publish-prod   publish to $(PROD_CDN)/$(APP)/$(VERSION)"
-	@echo "make clean          remove dist/"
+	@echo "make clean          remove dist/ and dest/"
 
 # build/index.html = src/base.html with src/category.xml injected as the toolbox.
 .PHONY: index
@@ -55,6 +79,19 @@ index:
 dist: index
 	@test -n "$(ASSET_BASE)" || { echo "error: ASSET_BASE is required — try 'make dev'"; exit 1; }
 	python3 src/build_dist.py "$(ASSET_BASE)"
+
+# Local build for the satellite-local Herd site. Flat layout (no version
+# directory) so the symlink target never moves; copied out of dist/ so a later
+# publish build does not clobber it, and a stale local build is never mistaken
+# for a publish.
+.PHONY: local
+local:
+	$(MAKE) dist ASSET_BASE=$(LOCAL_ORIGIN)/$(APP)
+	rm -rf dest/local
+	mkdir -p dest/local
+	cp -R dist/. dest/local/
+	@echo
+	@echo "dest/local ready: $(LOCAL_ORIGIN)/$(APP)/ (via the satellite-local Herd site)"
 
 .PHONY: dev
 dev:
@@ -100,4 +137,4 @@ publish:
 
 .PHONY: clean
 clean:
-	rm -rf dist
+	rm -rf dist dest
