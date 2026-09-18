@@ -1,5 +1,7 @@
-// The Arduino tab: shows the code Blockly generates, compiles it, and sends the
-// result to a board over Web Serial.
+// The Arduino tab: shows the code Blockly generates, compiles it, sends the
+// result to a board over Web Serial, and reads back what the board prints —
+// in the Serial Monitor tab and the Serial Plotter window, which share one
+// connection (serial_session.js).
 //
 // Loaded as a module so it can import the flasher directly. The rest of the app
 // is classic scripts sharing globals (Blockly, jQuery, Materialize), so this
@@ -10,6 +12,9 @@
 // from one pane to the other.
 
 import { flashArduinoUno } from "./arduino_flasher.js";
+import { SerialMonitor } from "./serial_monitor.js";
+import { SerialPlotter } from "./serial_plotter.js";
+import { SerialSession, sketchBaudRate } from "./serial_session.js";
 
 const ARDUINO_USB_FILTERS = [
     { usbVendorId: 0x2341 }, // Arduino LLC / Arduino SA
@@ -29,6 +34,10 @@ const state = {
 };
 
 const el = {};
+
+const serial = new SerialSession();
+const plotter = new SerialPlotter(serial);
+let monitor = null;
 
 function describePort(info) {
     const vid = info.usbVendorId?.toString(16)?.padStart(4, "0") ?? "????";
@@ -83,6 +92,37 @@ function refreshConnectButton() {
     el.connect.disabled = !webSerialSupported() || state.flashing;
 }
 
+// Like Upload, there's nothing to plot until a board is attached. A window
+// that is already open stays open through a disconnect and reconnects itself.
+function refreshPlotterButton() {
+    el.plotter.disabled = !state.port || !webSerialSupported();
+}
+
+function setPort(port) {
+    state.port = port;
+    serial.setPort(port, port ? describePort(port.getInfo()) : "");
+    if (port) {
+        setBoardStatus(describePort(port.getInfo()), true);
+    } else {
+        setBoardStatus("Not connected", false);
+    }
+    refreshUploadButton();
+    refreshPlotterButton();
+}
+
+// Compiler | Serial Monitor. Selecting the monitor is what connects it.
+function selectConsoleTab(name) {
+    const monitorSelected = name === "monitor";
+    el.tabCompiler.setAttribute("aria-selected", String(!monitorSelected));
+    el.tabMonitor.setAttribute("aria-selected", String(monitorSelected));
+    el.tabCompiler.tabIndex = monitorSelected ? -1 : 0;
+    el.tabMonitor.tabIndex = monitorSelected ? 0 : -1;
+    el.panelCompiler.hidden = monitorSelected;
+    el.panelMonitor.hidden = !monitorSelected;
+    el.monitorTools.hidden = !monitorSelected;
+    monitor.setActive(monitorSelected);
+}
+
 export function renderCode() {
     if (!window.Blockly?.Arduino || !window.Blockly.mainWorkspace) return;
 
@@ -91,12 +131,14 @@ export function renderCode() {
 
     el.code.value = code;
     invalidateHex();
+    serial.followSketchBaudRate(sketchBaudRate(code));
 }
 
 async function compile() {
     const config = window.FUSE_BLOCKLY;
     if (!config?.compileUrl) {
         setConsole("Compiling isn't available here — this page was opened outside FUSE.");
+        selectConsoleTab("compiler");
         return;
     }
     if (state.compiling) return;
@@ -144,19 +186,20 @@ async function compile() {
         el.compile.disabled = false;
         el.compile.querySelector("span").textContent = "Compile";
         refreshUploadButton();
+        // A student watching the monitor stays on it when the compile works
+        // (the toast says so); errors are only any use where they can be read.
+        if (!state.hex) selectConsoleTab("compiler");
     }
 }
 
 async function connect() {
     setFlashStatus("");
     try {
-        state.port = await navigator.serial.requestPort({ filters: ARDUINO_USB_FILTERS });
-        setBoardStatus(describePort(state.port.getInfo()), true);
+        setPort(await navigator.serial.requestPort({ filters: ARDUINO_USB_FILTERS }));
     } catch (e) {
         if (e?.name === "NotFoundError") return; // the picker was dismissed
         setFlashStatus(`Could not connect: ${e?.message ?? e}`, true);
     }
-    refreshUploadButton();
 }
 
 async function upload() {
@@ -175,6 +218,9 @@ async function upload() {
     setFlashStatus("Resetting board…");
 
     try {
+        // The monitor or plotter may be holding the port, and the flasher
+        // needs it to itself. Resuming reconnects whichever was watching.
+        await serial.suspend();
         await flashArduinoUno(state.port, state.hex, {
             onProgress: (page, total) => setFlashStatus(`Writing page ${page} of ${total}…`),
         });
@@ -182,6 +228,7 @@ async function upload() {
     } catch (e) {
         setFlashStatus(translateFlashError(e), true);
     } finally {
+        serial.resume();
         state.flashing = false;
         refreshUploadButton();
         refreshConnectButton();
@@ -205,35 +252,68 @@ export function initArduinoTab() {
     el.boardStatus = document.getElementById("arduino_board_status");
     el.flashStatus = document.getElementById("arduino_flash_status");
     el.unsupported = document.getElementById("arduino_unsupported");
+    el.plotter = document.getElementById("arduino_plotter");
+    el.tabList = document.getElementById("arduino_console_tablist");
+    el.tabCompiler = document.getElementById("arduino_tab_compiler");
+    el.tabMonitor = document.getElementById("arduino_tab_monitor");
+    el.panelCompiler = document.getElementById("arduino_panel_compiler");
+    el.panelMonitor = document.getElementById("arduino_panel_monitor");
+    el.monitorTools = document.getElementById("arduino_monitor_tools");
 
     if (!el.code) return;
+
+    monitor = new SerialMonitor(serial, {
+        message: document.getElementById("arduino_monitor_message"),
+        ending: document.getElementById("arduino_monitor_ending"),
+        baud: document.getElementById("arduino_monitor_baud"),
+        notice: document.getElementById("arduino_monitor_notice"),
+        output: document.getElementById("arduino_monitor_output"),
+        autoscroll: document.getElementById("arduino_monitor_autoscroll"),
+        timestamps: document.getElementById("arduino_monitor_timestamps"),
+        clear: document.getElementById("arduino_monitor_clear"),
+    });
 
     el.compile.addEventListener("click", compile);
     el.connect.addEventListener("click", connect);
     el.upload.addEventListener("click", upload);
+
+    el.tabCompiler.addEventListener("click", () => selectConsoleTab("compiler"));
+    el.tabMonitor.addEventListener("click", () => selectConsoleTab("monitor"));
+    // Arrow keys move between tabs, per the ARIA tabs pattern. With two
+    // tabs, either arrow goes to the other one.
+    el.tabList.addEventListener("keydown", (e) => {
+        if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+        e.preventDefault();
+        const next = el.tabMonitor.getAttribute("aria-selected") === "true" ? "compiler" : "monitor";
+        selectConsoleTab(next);
+        (next === "monitor" ? el.tabMonitor : el.tabCompiler).focus();
+    });
+
+    el.plotter.addEventListener("click", () => {
+        setFlashStatus("");
+        if (!plotter.open()) {
+            setFlashStatus("The Serial Plotter opens in its own window. Allow pop-ups for this page and try again.", true);
+        }
+    });
+    // Everything in the plotter window runs from this page, so it can't
+    // outlive it.
+    window.addEventListener("pagehide", () => plotter.close());
 
     if (!webSerialSupported()) {
         el.unsupported.style.display = "";
     } else {
         // A board authorised on a previous visit can be reused without prompting.
         navigator.serial.getPorts().then((ports) => {
-            if (ports.length > 0 && !state.port) {
-                state.port = ports[0];
-                setBoardStatus(describePort(ports[0].getInfo()), true);
-                refreshUploadButton();
-            }
+            if (ports.length > 0 && !state.port) setPort(ports[0]);
         });
         navigator.serial.addEventListener("disconnect", (event) => {
-            if (event.target === state.port) {
-                state.port = null;
-                setBoardStatus("Not connected", false);
-                refreshUploadButton();
-            }
+            if (event.target === state.port) setPort(null);
         });
     }
 
     refreshConnectButton();
     refreshUploadButton();
+    refreshPlotterButton();
 
     // Track the workspace so the tab is never stale, whichever tab is showing.
     //

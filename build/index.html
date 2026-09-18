@@ -227,8 +227,50 @@
 
           <textarea id="arduino_code" readonly wrap="off" spellcheck="false"></textarea>
 
-          <div class="arduino-card__title arduino-card__title--sub">Compiler</div>
-          <pre id="arduino_console">(compile output will appear here)</pre>
+          <!-- Compiler and Serial Monitor share the space under the code, as
+               Output and Serial Monitor do in the Arduino IDE. Selecting Serial
+               Monitor is what connects it; see serial_monitor.js. -->
+          <div class="arduino-console-tabs">
+            <div class="arduino-console-tabs__list" id="arduino_console_tablist" role="tablist" aria-label="Output">
+              <button type="button" role="tab" id="arduino_tab_compiler" class="arduino-console-tab"
+                      aria-selected="true" aria-controls="arduino_panel_compiler">Compiler</button>
+              <button type="button" role="tab" id="arduino_tab_monitor" class="arduino-console-tab"
+                      aria-selected="false" aria-controls="arduino_panel_monitor" tabindex="-1">Serial Monitor</button>
+            </div>
+            <div class="arduino-console-tools" id="arduino_monitor_tools" hidden>
+              <button type="button" id="arduino_monitor_autoscroll" class="arduino-tool"
+                      aria-pressed="true" aria-label="Toggle Autoscroll" title="Toggle Autoscroll">
+                <i class="material-icons" aria-hidden="true">vertical_align_bottom</i>
+              </button>
+              <button type="button" id="arduino_monitor_timestamps" class="arduino-tool"
+                      aria-pressed="false" aria-label="Toggle Timestamp" title="Toggle Timestamp">
+                <i class="material-icons" aria-hidden="true">schedule</i>
+              </button>
+              <!-- The IDE's clear glyph; the same one is in the plotter window. -->
+              <button type="button" id="arduino_monitor_clear" class="arduino-tool"
+                      aria-label="Clear Output" title="Clear Output">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+                  <path d="M3 4l6 6M9 4l-6 6M13 7h8M3 13h18M3 19h18"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="arduino-console-area">
+            <div id="arduino_panel_compiler" class="arduino-console-panel" role="tabpanel" aria-labelledby="arduino_tab_compiler">
+              <pre id="arduino_console" class="arduino-console">(compile output will appear here)</pre>
+            </div>
+            <div id="arduino_panel_monitor" class="arduino-console-panel" role="tabpanel" aria-labelledby="arduino_tab_monitor" hidden>
+              <div class="arduino-monitor__send">
+                <input type="text" id="arduino_monitor_message" aria-label="Message to send"
+                       autocomplete="off" spellcheck="false" disabled />
+                <select id="arduino_monitor_ending" class="browser-default arduino-select" aria-label="Line ending"></select>
+                <select id="arduino_monitor_baud" class="browser-default arduino-select" aria-label="Baud rate"></select>
+              </div>
+              <div id="arduino_monitor_notice" class="arduino-monitor__notice" role="status" hidden></div>
+              <pre id="arduino_monitor_output" class="arduino-console"></pre>
+            </div>
+          </div>
         </section>
 
         <aside class="arduino-card arduino-card--board">
@@ -269,6 +311,11 @@
             Uploading takes a few seconds. If it fails, press the reset button
             on the Arduino and try again.
           </div>
+
+          <!-- Opens its own window, as in the Arduino IDE; see serial_plotter.js. -->
+          <button type="button" id="arduino_plotter" class="btn-flat waves-effect arduino-plotter-button">
+            <i class="material-icons left">show_chart</i><span>Serial Plotter</span>
+          </button>
 
           <p class="arduino-trademark">Arduino® is a trademark of Arduino S.r.l.</p>
         </aside>

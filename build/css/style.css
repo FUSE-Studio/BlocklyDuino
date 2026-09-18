@@ -239,10 +239,6 @@ pre.content {
   color: #1f2933;
 }
 
-.arduino-card__title--sub {
-  padding: 12px 0 6px;
-}
-
 /* Generated code: read-only, and a plain light box so it reads as a document
    rather than as a second console. */
 #arduino_code {
@@ -264,9 +260,184 @@ pre.content {
   white-space: pre;
 }
 
-#arduino_console {
+/* Compiler | Serial Monitor, under the code. */
+.arduino-console-tabs {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 10px 0 8px;
+  border-bottom: 1px solid #d5dae0;
+}
+
+.arduino-console-tabs__list {
+  display: flex;
+  gap: 4px;
+}
+
+.arduino-console-tab {
+  margin-bottom: -1px;
+  padding: 6px 10px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: #6b7280;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.arduino-console-tab:hover,
+.arduino-console-tab[aria-selected="true"] {
+  color: #1f2933;
+}
+
+.arduino-console-tab[aria-selected="true"] {
+  border-bottom-color: #00979c;
+}
+
+.arduino-console-tools {
+  display: flex;
+  gap: 2px;
+  padding-bottom: 3px;
+}
+
+.arduino-console-tools[hidden] {
+  display: none;
+}
+
+.arduino-tool {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #6b7280;
+  cursor: pointer;
+}
+
+.arduino-tool .material-icons {
+  font-size: 20px;
+}
+
+.arduino-tool svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* Materialize paints every focused <button> teal and drops its outline. Undo
+   the paint, and put a ring back for keyboard focus only. */
+.arduino-console-tab:focus,
+.arduino-tool:focus {
+  background-color: transparent;
+}
+
+.arduino-console-tab:focus-visible,
+.arduino-tool:focus-visible {
+  outline: 2px solid #00979c;
+  outline-offset: -2px;
+  border-radius: 6px;
+}
+
+/* After the :focus reset, so a toggled-on tool keeps its fill once clicked. */
+.arduino-tool:hover {
+  background-color: #f0f2f4;
+  color: #1f2933;
+}
+
+.arduino-tool[aria-pressed="true"] {
+  background-color: rgba(0, 151, 156, 0.1);
+  color: #00979c;
+}
+
+/* One fixed height for both panels, so switching tabs never resizes the code
+   view above them. */
+.arduino-console-area {
+  display: flex;
+  flex-direction: column;
   flex: 0 0 auto;
-  height: 150px;
+  height: 190px;
+}
+
+.arduino-console-panel {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  gap: 8px;
+  min-height: 0;
+}
+
+.arduino-console-panel[hidden] {
+  display: none;
+}
+
+.arduino-monitor__send {
+  display: flex;
+  flex: 0 0 auto;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* By id: Materialize's input[type=text]:focus:not([readonly]) would out-rank
+   a class. */
+#arduino_monitor_message {
+  flex: 1 1 180px;
+  min-width: 0;
+  height: 34px;
+  margin: 0;
+  padding: 0 10px;
+  box-sizing: border-box;
+  border: 1px solid #b9c0c7;
+  border-radius: 8px;
+  background-color: #fff;
+  box-shadow: none;
+  color: #1f2933;
+  font-size: 13px;
+}
+
+#arduino_monitor_message:focus {
+  border-color: #00979c;
+  box-shadow: 0 0 0 1px #00979c;
+}
+
+#arduino_monitor_message:disabled {
+  background-color: #f4f5f7;
+}
+
+#arduino_monitor_message::placeholder {
+  color: #6b7280;
+}
+
+.arduino-card select.arduino-select {
+  flex: 0 0 auto;
+  width: auto;
+  height: 34px;
+  margin: 0;
+  padding: 0 6px;
+  border: 1px solid #b9c0c7;
+  border-radius: 8px;
+  background-color: #fff;
+  color: #1f2933;
+  font-size: 13px;
+}
+
+.arduino-monitor__notice {
+  flex: 0 0 auto;
+  color: #c62828;
+  font-size: 12px;
+}
+
+.arduino-monitor__notice[hidden] {
+  display: none;
+}
+
+.arduino-console {
+  flex: 1 1 auto;
+  min-height: 0;
   margin: 0;
   padding: 12px 14px;
   box-sizing: border-box;
@@ -316,8 +487,8 @@ pre.content {
     height: 220px;
   }
 
-  #arduino_console {
-    height: 120px;
+  .arduino-console-area {
+    height: 170px;
   }
 }
 
@@ -450,10 +621,16 @@ pre.content {
   color: #6b7280;
 }
 
-/* Tailwind's text-xs (12px/16px). margin-top:auto pins the credit to the foot
-   of the card, below the flash status, however tall the column ends up. */
+/* The plotter button and the credit under it sit together at the foot of the
+   card, below the flash status, however tall the column ends up. The button's
+   auto margin is what pins them there. */
+.arduino-card--board .arduino-plotter-button {
+  margin-top: auto;
+}
+
+/* Tailwind's text-xs (12px/16px). */
 .arduino-trademark {
-  margin: auto 0 0;
+  margin: 0;
   padding-top: 10px;
   font-size: 12px;
   line-height: 16px;

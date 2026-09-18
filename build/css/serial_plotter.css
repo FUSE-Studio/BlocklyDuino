@@ -1,0 +1,332 @@
+/* The Serial Plotter window (js/serial_plotter.js), laid out after the Arduino
+   IDE's. The window is about:blank with this as its only stylesheet, so none
+   of Materialize applies here — and none of it needs undoing. */
+
+@font-face {
+  font-family: "Roboto";
+  src: url("../fonts/roboto/Roboto-Regular.woff2") format("woff2");
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: "Roboto";
+  src: url("../fonts/roboto/Roboto-Bold.woff2") format("woff2");
+  font-weight: 700;
+}
+
+:root {
+  color-scheme: light;
+  --teal: #008184;
+  --teal-hover: #006d70;
+  --stop: #da5b4a;
+  --stop-hover: #c54a3a;
+  --ink: #2c353a;
+  --ink-muted: #4e5b61;
+  --line: #c9d2d2;
+  --foot: #ecf1f1;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: #fff;
+  color: var(--ink);
+  font: 14px/1.4 Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+.plotter {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+button:focus-visible,
+select:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+}
+
+/* Header: series legend on the left, controls on the right. */
+
+.plotter__head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-height: 56px;
+  padding: 10px 20px;
+  box-sizing: border-box;
+}
+
+.plotter__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  min-width: 0;
+}
+
+.plotter__legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.plotter__legend-item input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--series);
+  cursor: pointer;
+}
+
+.plotter__controls {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
+.plotter__switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ink-muted);
+  cursor: pointer;
+  user-select: none;
+}
+
+.plotter__switch input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.plotter__track {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  border-radius: 10px;
+  background: var(--line);
+  transition: background-color .15s ease-out;
+}
+
+.plotter__track::after {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, .25);
+  transition: transform .15s ease-out;
+}
+
+.plotter__switch input:checked + .plotter__track {
+  background: var(--teal);
+}
+
+.plotter__switch input:checked + .plotter__track::after {
+  transform: translateX(16px);
+}
+
+.plotter__switch input:focus-visible + .plotter__track {
+  outline: 2px solid var(--teal);
+  outline-offset: 2px;
+}
+
+.plotter__stop,
+.plotter__send {
+  padding: 6px 22px;
+  border: 0;
+  border-radius: 16px;
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.plotter__stop {
+  min-width: 88px;
+  background: var(--stop);
+}
+
+.plotter__stop:hover {
+  background: var(--stop-hover);
+}
+
+/* Stopped: the button offers Start, in the IDE's teal. */
+.plotter__stop[aria-pressed="true"] {
+  background: var(--teal);
+}
+
+.plotter__stop[aria-pressed="true"]:hover {
+  background: var(--teal-hover);
+}
+
+.plotter__clear {
+  display: inline-flex;
+  padding: 4px;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.plotter__clear:hover {
+  background: var(--foot);
+}
+
+.plotter__clear svg {
+  width: 24px;
+  height: 24px;
+}
+
+/* Chart. The canvas fills it; the notice and readout float over it. */
+
+.plotter__chart {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.plotter__chart canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.plotter__notice {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 48px;
+  color: var(--ink-muted);
+  text-align: center;
+  pointer-events: none;
+}
+
+.plotter__notice[hidden] {
+  display: none;
+}
+
+.plotter__tip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 8px 10px;
+  border: 1px solid #d5dada;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .12);
+  font-size: 12px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.plotter__tip[hidden] {
+  display: none;
+}
+
+.plotter__tip-head {
+  margin-bottom: 4px;
+  color: var(--ink-muted);
+}
+
+.plotter__tip-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  line-height: 1.6;
+}
+
+/* A short stroke of the series colour: the key mirrors the mark. */
+.plotter__tip-key {
+  width: 12px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--series);
+}
+
+.plotter__tip-row strong {
+  color: var(--ink);
+}
+
+.plotter__tip-row span:last-child {
+  color: var(--ink-muted);
+}
+
+/* Footer: message, Send, line ending, and baud rate pushed to the right. */
+
+.plotter__foot {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  background: var(--foot);
+}
+
+.plotter__foot input[type="text"],
+.plotter__foot select {
+  height: 32px;
+  box-sizing: border-box;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+}
+
+.plotter__foot input[type="text"] {
+  flex: 0 1 216px;
+  min-width: 0;
+  padding: 0 8px;
+}
+
+.plotter__foot input[type="text"]:disabled {
+  background: #f6f8f8;
+}
+
+.plotter__foot select {
+  min-width: 150px;
+  padding: 0 6px;
+}
+
+.plotter__send {
+  background: var(--teal);
+}
+
+.plotter__send:hover {
+  background: var(--teal-hover);
+}
+
+.plotter__send:disabled {
+  opacity: .5;
+  cursor: default;
+}
+
+.plotter__send:disabled:hover {
+  background: var(--teal);
+}
+
+.plotter__baud {
+  margin-left: auto;
+}
